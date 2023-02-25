@@ -8,7 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      # - uses: actions/checkout@v2
+      # Node.js 12 actions are deprecated. Please update the following actions to use Node.js 16: actions/checkout@v2
+      - uses: actions/checkout@v3
       # Log in to the docker CLI
       - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       # -f : force the use of the Dockerfile.dev instead of the default Dockerfile
