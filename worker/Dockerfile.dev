@@ -1,0 +1,10 @@
+# we need a specific version of node to avoid bugs
+FROM node:16-alpine
+WORKDIR '/app'
+COPY ./package.json ./
+RUN npm install
+COPY . .
+# default command
+# 'dev' because in developement we are going to take advantage of 
+# combining 'nodemon' with 'docker volumes'
+CMD ["npm", "run", "dev"]

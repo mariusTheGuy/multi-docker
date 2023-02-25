@@ -1,0 +1,44 @@
+name: Deploy MultiDocker
+on:
+  push:
+    branches:
+      - master # check your repo, your default branch might be master!
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Log in to the docker CLI
+      - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      # -f : force the use of the Dockerfile.dev instead of the default Dockerfile
+      - run: docker build -t cviejo18/react-test -f ./client/Dockerfile.dev ./client
+      # run the test so we need to override default command
+      # By default npm test runs the watcher with interactive CLI. However, you can force it to run tests once and finish the process by setting an environment variable called CI.
+      # https://create-react-app.dev/docs/running-tests/#continuous-integration
+      - run: docker run -e CI=true cviejo18/react-test npm test
+      # builds PROD IMAGES
+      - run: docker build -t cviejo18/multi-client ./client
+      - run: docker build -t cviejo18/multi-nginx ./nginx
+      - run: docker build -t cviejo18/multi-server ./server
+      - run: docker build -t cviejo18/multi-worker ./worker
+      # Take those images and push them to docker hub
+      - run: docker push cviejo18/multi-client
+      - run: docker push cviejo18/multi-nginx
+      - run: docker push cviejo18/multi-server
+      - run: docker push cviejo18/multi-worker
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      # - name: Deploy to EB
+      #   uses: einaregilsson/beanstalk-deploy@v18
+      #   with:
+      #     aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+      #     aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+      #     application_name: multi-gh
+      #     environment_name: Multigh-env
+      #     existing_bucket_name: elasticbeanstalk-us-east-1-923445559289
+      #     region: us-east-1
+      #     version_label: ${{ github.sha }}
+      #     deployment_package: deploy.zip
